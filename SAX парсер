@@ -1,0 +1,72 @@
+//Вот код измененного метода characters. Единственное, для чего нужен иф - тчобы узнать, какую конфету посылать в приватный метод
+
+ public void characters(char[] ch, int start, int length) {
+
+        String str = new String(ch, start, length).trim();
+        if (currentEnum == null) {
+            return;
+        }
+
+       if (CHOCOLATE_CANDY_TAG.equals(qName)){
+           setFields(chocolateCandy, str);
+       }else {
+           setFields(stuffedCandy, str);
+       }
+  }
+
+//Конструкция T extends AbstractCandy говорит о том, что параметр с типом T - это любой класс, наследуемый от AbstractCandy.
+//Соответственно, оба типа отлично подходят.
+//Так как у тебя есть xsd валидация, то мы уверены, что, скажем, FILLING_TYPE никогда не будет вызван на обычной
+//шоколадной конфете, ибо тега Filling-Type в родительском теге обычной шоколадной конфеты быть не может. Именно поэтому
+//я смело привожу тип на конфету с начинкой и присвиваю значение.
+//По типу шоколада. Так как конфета с начинкой наследуется от шоколадной, я без боязни могу явно привести тип к шоколадной конфете.
+//Почему нельзя тут без приведения? Потому что T, по сути, имеет методы лишь родительского класса, то есть AbstractCandy.
+//Чтобы получить методы наследника, надо привести к наследнику явно. Если бы мы не знали, что сюда приходит, то надо было бы проверить
+//вызовом instanceof, что объект является представителем того наследника, а потом приводить к нему.
+
+    private <T extends AbstractCandy> void setFields( T candy, String str){
+
+        switch (currentEnum) {
+            case NAME:
+                candy.setName(str);
+                break;
+            case PRODUCER:
+                candy.setProducer(str);
+                break;
+            case ENERGY:
+                candy.setEnergyCalories(Integer.parseInt(str));
+                break;
+            case CHOCOLATE_TYPE:
+                ((ChocolateCandy)candy).setChocolateType(ChocolateType.valueOf(str));
+                break;
+            case FILLING_TYPE:
+                ((StuffedChocolateCandy)candy).setFillingType(FillingType.valueOf(str));
+                break;
+        }
+    }
+    //Также по методу startElement
+    
+        public void startElement(String uri, String localName, String qName) {
+
+        if (qName.equals(CHOCOLATE_CANDY_TAG)) {
+            this.qName = qName;
+            chocolateCandy = new ChocolateCandy();
+
+
+        }
+
+        if (qName.equals(STUFFED_CHOCOLATE_CANDY_TAG)) {
+            this.qName = qName;
+            stuffedCandy = new StuffedChocolateCandy();
+
+        }
+//в начале метода ты проверяешь на одну строку, потом на вторую, а потом снова на первую и вторую, плюс третью.
+//Чтобы избежать повторных проверок, лучше сделать if(проверка1){...} else if(проверка2){...} else if(проверка3){...}
+        if (!STUFFED_CHOCOLATE_CANDY_TAG.equals(qName) &&
+                !CHOCOLATE_CANDY_TAG.equals(qName) &&
+                !CANDIES.equals(qName)) {
+            currentEnum = CandyEnum.valueOf(qName.toUpperCase().replace("-", "_"));
+        }
+    }
+    
+    
